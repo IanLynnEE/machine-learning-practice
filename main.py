@@ -8,6 +8,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy import stats
 from scipy import integrate
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay 
+from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 
 def _split_data():
@@ -89,12 +91,12 @@ class MyClassifier:
                             data[i], data[i]+delta)[0]
                 posts[counter][label] = tmp
         return posts
-
+    
     def predict(self, tests):
-        result = [] 
+        yp = [] 
         for post in self._inference(tests, 1e-6):
-            result.append(max(post, key=post.get))
-        return result
+            yp.append(max(post, key=post.get))
+        return yp
 
 if __name__ == '__main__':
     # Part 1
@@ -105,15 +107,58 @@ if __name__ == '__main__':
     xt, yt = _read_data('test.csv', shuffle=True)
     detector = MyClassifier(x, y)
     detector.train()
-    result = detector.predict(xt)
+    yp = detector.predict(xt)
+    print('Priors =', detector.priors)
 
     correct = 0
     for i in range(len(yt)):
-        if result[i] == yt[i]:
+        if yp[i] == yt[i]:
             correct += 1
     print('Acc:', correct/len(yt))
 
-    # Part 3
-    
+    names = ['Type_1', 'Type_2', 'Type_3']
+    cm = confusion_matrix(yt, yp)
+    cmd = ConfusionMatrixDisplay(cm,display_labels=names)
+    cmd.plot()
+    cmd.ax_.set(title='Result', xlabel='Predicted', ylabel='Actual')
+    plt.savefig('./result.png', dpi=300)
+    plt.close()
 
+    # Part 3
+    xt, yt = _read_data('test.csv')                 # Read without shuffle
+    scaler = StandardScaler()
+    pca2 = PCA(n_components=2)
+    x_scaled= scaler.fit_transform(x)               # Train scaler
+    pca2.fit(x_scaled)                              # Train pca
+    xt_scaled = scaler.transform(xt)
+    x_pca = pca2.transform(xt_scaled)
+    
+    colors = ['r', 'g', 'b']
+    labels = [1, 2, 3]
+    markers = ['s', 'x', 'o']
+    names = ['Type 1', 'Type 2', 'Type 3']
+    
+    for j, i in enumerate(range(0, 54, 18)): 
+        plt.scatter(x_pca[i:i+18, 0], x_pca[i:i+18, 1], 
+                c=colors[j], label=names[j], marker=markers[j])
+    plt.title('PCA Analysis')
+    plt.legend(loc='upper right')
+    plt.ylabel('PCA Feature 2')
+    plt.xlabel('PCA Feature 1')
+    plt.savefig('./pca.png', dpi=300)
+    plt.close()
+
+    # Part 4
+    x, y = _read_data('train.csv')
+    xt, yt = _read_data('test.csv', shuffle=True)
+    detector = MyClassifier(x, y)
+    detector.train()
+    detector.priors = {1: 0.3, 2: 0.3, 3: 0.3}
+    yp = detector.predict(xt)
+    print('Priors =', detector.priors)
+    correct = 0
+    for i in range(len(yt)):
+        if yp[i] == yt[i]:
+            correct += 1
+    print('Acc:', correct/len(yt))
 
