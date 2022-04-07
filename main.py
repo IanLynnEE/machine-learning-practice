@@ -1,5 +1,6 @@
 # Determine 3 types of wines from 13 features.
 # Warning: Labels need to be integer.
+# Warning: Training data needs to be sorted by label.
 
 import csv
 import random
@@ -116,7 +117,7 @@ if __name__ == '__main__':
             correct += 1
     print('Acc:', correct/len(yt))
 
-    names = ['Type_1', 'Type_2', 'Type_3']
+    names = ['Type 1', 'Type 2', 'Type 3']
     cm = confusion_matrix(yt, yp)
     cmd = ConfusionMatrixDisplay(cm,display_labels=names)
     cmd.plot()
@@ -134,10 +135,7 @@ if __name__ == '__main__':
     x_pca = pca2.transform(xt_scaled)
     
     colors = ['r', 'g', 'b']
-    labels = [1, 2, 3]
     markers = ['s', 'x', 'o']
-    names = ['Type 1', 'Type 2', 'Type 3']
-    
     for j, i in enumerate(range(0, 54, 18)): 
         plt.scatter(x_pca[i:i+18, 0], x_pca[i:i+18, 1], 
                 c=colors[j], label=names[j], marker=markers[j])
@@ -149,7 +147,6 @@ if __name__ == '__main__':
     plt.close()
 
     # Part 4
-    x, y = _read_data('train.csv')
     xt, yt = _read_data('test.csv', shuffle=True)
     detector = MyClassifier(x, y)
     detector.train()
