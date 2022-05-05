@@ -2,6 +2,8 @@
 hw01/train.csv
 hw01/test.csv
 hw01/report.pdf
+hw02/result.png
+hw02/report.pdf
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
