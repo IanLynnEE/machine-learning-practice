@@ -105,7 +105,22 @@ def MLR(x, xt, O1=5, O2=5):
     phi_test[:, :O1*O2], _, _ = _phi_GBF(xt[:, :2], O1, O2, scale, center)
     return phi_test.dot(w)
 
-def _playground(x, y, xt, yt):
+def _playground(data_train, data_test, predict_MLR, predict_BLR):
+    import matplotlib.pyplot as plt
+
+    x,  y  = data_train[:, :3], data_train[:, 3]
+    xt, yt = data_test[:, :3],  data_test[:, 3]
+
+    plt.subplot(121)
+    plt.plot(x[:, 0], y)
+    plt.xlabel('GRE score')
+    plt.ylabel('Chance of Admit')
+    plt.subplot(122)
+    plt.plot(x[:, 1], y)
+    plt.xlabel('TOEFL score')
+    plt.ylabel('Chance of Admit')
+    plt.show()
+
     return
     
 
@@ -136,6 +151,7 @@ def main():
         e1=CalMSE(predict_BLR, data_test_label), 
         e2=CalMSE(predict_MLR, data_test_label)
     ))
+    _playground(data_train, data_test, predict_MLR, predict_BLR)
     return 0
 
 if __name__ == '__main__':
