@@ -1,6 +1,6 @@
 # ML Homework 2
 
-Predict admit chance by 3 features: GRE, TOEFL, Research Experience.
+Predict chance of admit by 3 features: GRE, TOEFL, Research Experience.
 
 ## Run
 
@@ -60,8 +60,6 @@ At the endpoints, the difference shows up.
 
 For small O1 i.e. not extending original features too much, the Bayesian Linear Regression seems to be a better choice for this task. The slope can remain positive at the left endpoint, just for a bit longer.
 
-
-
 ## Implementation
 
 For forming the feature vector by the Gaussian basis function, I try to utilize the feature of numpy.
@@ -106,7 +104,6 @@ $$
 S_N^{-1} &= \alpha I + \beta\Phi^T\Phi,\\
 m_N      &= \beta S_N \Phi^T t,\\
 \gamma   &= \sum_{j=1}^M \frac{\lambda_j}{\alpha+\lambda_j}, \\
-\ \\
 \alpha   &= \frac{\gamma}{m_N^T m_N}, \\
 \beta    &= \frac{N-\gamma}{\sum_{i=1}^N (t_i - m_N^T \phi(x_i))^2} 
 \end{array} 
@@ -119,8 +116,7 @@ That is:
 3. Calculate $\alpha,\ \beta$ from $S_N^{-1},\ m_N$
 4. Go back to step 2 if the change in $\alpha,\ \beta$ still large.
 
-
-
+<div style="page-break-after: always;"></div>
 ## References
 
 http://krasserm.github.io/2019/02/23/bayesian-linear-regression/
