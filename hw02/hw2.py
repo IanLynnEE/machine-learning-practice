@@ -61,10 +61,8 @@ def _fit_BLR(x, y, alpha=1e-5, beta=1e-5, max_iter=100):
         beta_new = (np.shape(x)[0] - gamma) / np.sum(np.square(y - x.dot(m_N)))
         # Check convergence.
         if np.isclose(alpha, alpha_new) and np.isclose(beta, beta_new):
-            print(f'Converge after {i + 1} iterations.')
-            return m_N
+            break
         alpha = alpha_new; beta = beta_new
-    print(f'Stop after {max_iter} iterations.')
     return m_N
 
 
@@ -105,24 +103,85 @@ def MLR(x, xt, O1=5, O2=5):
     phi_test[:, :O1*O2], _, _ = _phi_GBF(xt[:, :2], O1, O2, scale, center)
     return phi_test.dot(w)
 
-def _playground(data_train, data_test, predict_MLR, predict_BLR):
+def _playground(data_train, data_test, O_1, O_2):
     import matplotlib.pyplot as plt
+    import seaborn as sns
 
-    x,  y  = data_train[:, :3], data_train[:, 3]
-    xt, yt = data_test[:, :3],  data_test[:, 3]
+    x,  y  = data_train[:, :3],  data_train[:, 3]
+    xt, yt = data_test[:, :3],   data_test[:, 3]
+    
+    gre_train = np.random.rand(*np.shape(data_train))
+    gre_train[:, 0] = data_train[:, 0]
+    gre_train[:, 3] = data_train[:, 3]
+    gre_xt = np.ones([1000, 3]) / 2
+    gre_xt[:, 0] = np.linspace(270, 350, 1000)
 
+    error_MLR = np.ones([10, 10])
+    error_BLR = np.ones([10, 10])
+    for i in range(2, 10):
+        for j in range(2, 10):
+            yt_MLR = MLR(data_train, xt, O1=i, O2=j)
+            yt_BLR = BLR(data_train, xt, O1=i, O2=j)
+            error_MLR[i, j] = CalMSE(yt_MLR, yt)
+            error_BLR[i, j] = CalMSE(yt_BLR, yt)
+
+    plt.figure(figsize=(32,9))
     plt.subplot(121)
-    plt.plot(x[:, 0], y)
-    plt.xlabel('GRE score')
+    sns.heatmap(error_MLR, annot=True, vmin=0.007, vmax=0.008, fmt='.5f')
+    plt.title('MSE for MLR')
+    plt.xlabel('O2')
+    plt.ylabel('O1')
+    plt.subplot(122)
+    sns.heatmap(error_BLR, annot=True, vmin=0.007, vmax=0.008, fmt='.5f')
+    plt.title('MSE for BLR')
+    plt.xlabel('O2')
+    plt.ylabel('O1')
+    plt.savefig('impact_O1_O2.png', dpi=300, bbox_inches='tight')
+    plt.clf()
+
+    plt.figure(figsize=(32,9))
+    plt.subplot(121)
+    plt.scatter(x[:, 0], y)
+    plt.scatter(xt[:, 0], yt, c='r')
+    plt.title('Feature: GRE Score')
+    plt.xlabel('GRE Score')
     plt.ylabel('Chance of Admit')
     plt.subplot(122)
-    plt.plot(x[:, 1], y)
-    plt.xlabel('TOEFL score')
+    plt.scatter(x[:, 1], y)
+    plt.scatter(xt[:, 1], yt, c='r')
+    plt.title('Feature: TOEFL Score')
+    plt.xlabel('TOEFL Score')
     plt.ylabel('Chance of Admit')
-    plt.show()
+    plt.savefig('train_vs_test.png', dpi=300, bbox_inches='tight')
+    plt.clf()
 
+    gre_yt_MLR = MLR(gre_train, gre_xt, O1=5, O2=2)
+    gre_yt_BLR = BLR(gre_train, gre_xt, O1=5, O2=2)
+    plt.figure(figsize=(32,9))
+    plt.plot(gre_xt[:, 0], gre_yt_MLR, c='r', label='MLR')
+    plt.plot(gre_xt[:, 0], gre_yt_BLR, c='m', label='BLR')
+    plt.scatter(x[:,0], y)
+    plt.title('GRE Score Only')
+    plt.xlabel('GRE Score')
+    plt.ylabel('Chance of Admin')
+    plt.legend()
+    plt.savefig('train_GRE_only_O1_5.png', dpi=300, bbox_inches='tight')
+    plt.clf()
+
+    gre_yt_MLR = MLR(gre_train, gre_xt, O1=2, O2=2)
+    gre_yt_BLR = BLR(gre_train, gre_xt, O1=2, O2=2)
+    plt.figure(figsize=(32,9))
+    plt.plot(gre_xt[:, 0], gre_yt_MLR, c='r', label='MLR')
+    plt.plot(gre_xt[:, 0], gre_yt_BLR, c='m', label='BLR')
+    plt.scatter(x[:,0], y)
+    plt.title('GRE Score Only')
+    plt.xlabel('GRE Score')
+    plt.ylabel('Chance of Admin')
+    plt.legend()
+    plt.savefig('train_GRE_only_O1_2.png', dpi=300, bbox_inches='tight')
+    plt.clf()
     return
-    
+
 
 def CalMSE(data, prediction):
     squared_error = (data - prediction) ** 2
@@ -151,7 +210,7 @@ def main():
         e1=CalMSE(predict_BLR, data_test_label), 
         e2=CalMSE(predict_MLR, data_test_label)
     ))
-    _playground(data_train, data_test, predict_MLR, predict_BLR)
+    # _playground(data_train, data_test, O_1, O_2)
     return 0
 
 if __name__ == '__main__':
