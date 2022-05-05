@@ -10,9 +10,9 @@ import scipy.stats
 import argparse
 
 
-def _phi_gbf(x, O1, O2, scale=None, center=None):
+def _phi_GBF(x, O1, O2, scale=None, center=None):
     '''
-    Input:
+    input:
         x      : ndarray with size (length of data, 2 features)
         O1     : int
         O2     : int
@@ -40,7 +40,7 @@ def _phi_gbf(x, O1, O2, scale=None, center=None):
 
 def _fit_BLR(x, y, alpha=1e-5, beta=1e-5, max_iter=100):
     '''
-    Input:
+    input:
         x        : ndarray with size (length of data, number of features)
         y        : ndarray with size (length of data, )
         alpha    : (optional) float, initial alpha
@@ -81,14 +81,12 @@ def BLR(x, xt, O1=5, O2=5):
     phi_train = np.zeros([np.shape(x)[0], O1*O2+2])
     phi_train[:, O1*O2] = x[:, 2]
     phi_train[:, O1*O2+1] = 1
-    phi_train[:, :O1*O2], scale, center = _phi_gbf(x[:, :2], O1, O2)
+    phi_train[:, :O1*O2], scale, center = _phi_GBF(x[:, :2], O1, O2)
     m_N = _fit_BLR(phi_train, x[:, 3])
     phi_test = np.zeros([np.shape(xt)[0], O1*O2+2])
     phi_test[:, O1*O2] = xt[:, 2]
     phi_test[:, O1*O2+1] = 1
-    phi_test[:, :O1*O2], _, _ = _phi_gbf(xt[:, :2], O1, O2, scale, center) 
-    # m_N = _fit_BLR(x[:, :2], x[:, 3])
-    # return xt[:, :2].dot(m_N)
+    phi_test[:, :O1*O2], _, _ = _phi_GBF(xt[:, :2], O1, O2, scale, center) 
     return phi_test.dot(m_N)
 
 
@@ -99,14 +97,17 @@ def MLR(x, xt, O1=5, O2=5):
     phi_train = np.zeros([np.shape(x)[0], O1*O2+2])
     phi_train[:, O1*O2] = x[:, 2]
     phi_train[:, O1*O2+1] = 1
-    phi_train[:, :O1*O2], scale, center = _phi_gbf(x[:, :2], O1, O2)
+    phi_train[:, :O1*O2], scale, center = _phi_GBF(x[:, :2], O1, O2)
     w = np.linalg.pinv(phi_train).dot(x[:, 3])
     phi_test = np.zeros([np.shape(xt)[0], O1*O2+2])
     phi_test[:, O1*O2] = xt[:, 2]
     phi_test[:, O1*O2+1] = 1
-    phi_test[:, :O1*O2], _, _ = _phi_gbf(xt[:, :2], O1, O2, scale, center)
+    phi_test[:, :O1*O2], _, _ = _phi_GBF(xt[:, :2], O1, O2, scale, center)
     return phi_test.dot(w)
 
+def _playground(x, y, xt, yt):
+    return
+    
 
 def CalMSE(data, prediction):
     squared_error = (data - prediction) ** 2
