@@ -1,8 +1,9 @@
 # Result files
-hw01/train.csv
-hw01/test.csv
-hw01/report.pdf
-hw02/report.pdf
+**/train.csv
+**/test.csv
+**/report.pdf
+**/Data_test
+**/Data_train
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
