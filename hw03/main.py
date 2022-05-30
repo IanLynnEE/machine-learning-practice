@@ -1,7 +1,5 @@
 import os
 import argparse
-from sys import argv
-from turtle import forward
 
 from PIL import Image
 import numpy as np
@@ -42,43 +40,38 @@ def pre_processing(x: np.ndarray, xt: np.ndarray) -> tuple[np.ndarray]:
 
 
 # TODO
-# 1. Softmax and it's impact.
-# 2. Weight of bias
-# 3. SGD
-# 4. Initial value of weight
+# 1. Confirm softmax and it's impact.
+# 2. SGD
 class TwoLayersClassifier:
-    def __init__(self, n_h=6, lambda_=0, rate=1, atol=1e-5, max_iters=10000):
+    def __init__(self, n_h=6, *, rate=1, atol=1e-5, max_iters=10000):
         self.n_h = n_h
-        self.lambda_ = lambda_
         self.rate = rate
         self.atol = atol
         self.max_iters = max_iters
-        self.n_f  = 0
-        self.w1 = None
-        self.w2 = None
-        self.a1 = None
-        self.z2 = None
-        self.a2 = None
-        self.z3 = None
-        self.a3 = None
 
     # Sigmoid as Activation Function
     def sigma(self, x):
         return 1 / (1 + np.exp(-x))
     def d_sigma(self, x):
         return self.sigma(x) * (1 - self.sigma(x))
+    
+    def softmax(self, x):
+        exps = np.exp(x - x.max(axis=1, keepdims=True))
+        return exps / np.sum(exps, axis=1, keepdims=True)
 
     def fit(self, x, labels):
-        N, self.n_f = np.shape(x)
-        y = np.zeros((N, np.max(labels)))
+        N, M = np.shape(x)
+        n_out = np.max(labels)
+        # Make one-hot label.
+        y = np.zeros((N, n_out))
         for i in range(N):
             y[i, labels[i] - 1] = 1
         # Initial value of weight
-        self.w1 = np.random.rand(self.n_h, self.n_f + 1) / self.n_f
-        self.w2 = np.random.rand(np.max(labels), self.n_h + 1) / self.n_h
+        self.w1 = np.random.rand(self.n_h, M + 1) * np.sqrt(1/self.n_h)
+        self.w2 = np.random.rand(n_out, self.n_h + 1) * np.sqrt(1/n_out)
         for i in range(self.max_iters):
             self.forward(x)
-            # cost = self.compute_cost(y)
+            # print(self.cross_entropy_loss(y))
             grad = self.backprop(y)
             self.w1 -= grad[0] * self.rate
             self.w2 -= grad[1] * self.rate
@@ -91,29 +84,21 @@ class TwoLayersClassifier:
 
     def forward(self, x):
         self.a1 = np.insert(x, 0, 1, axis=1)
-        self.z2 = self.a1.dot(self.w1.T)
+        self.z2 = self.a1 @ self.w1.T
         self.a2 = np.insert(self.sigma(self.z2), 0, 1, axis=1)
-        self.z3 = self.a2.dot(self.w2.T)
-        self.a3 = self.sigma(self.z3)
+        self.z3 = self.a2 @ self.w2.T
+        self.a3 = self.softmax(self.z3)
     
-    def compute_cost(self, y):
-        N = y.shape[0]
-        ones = np.ones_like(y)
-        A = y * np.log(self.a3) + (ones - y) * np.log(ones - self.a3)
-        J = -1 / N * A.trace()
-        J += self.lambda_ / (2 * N) \
-            * (np.sum(self.w1[:, 1:] ** 2) + np.sum(self.w2[:, 1:] ** 2))
-        return J
+    def cross_entropy_loss(self, y):
+        return -np.sum(y * np.log(self.a3)) / y.shape[0]
 
     def backprop(self, y):
         delta3 = self.a3 - y
-        delta2 = delta3.dot(self.w2[:, 1:]) * self.d_sigma(self.z2)
-        w2_grad = self.a2.T.dot(delta3).T
-        w1_grad = self.a1.T.dot(delta2).T
-        w2_grad[:, 1:] += self.lambda_ * self.w2[:, 1:]
-        w1_grad[:, 1:] += self.lambda_ * self.w1[:, 1:]
-        w2_grad /= self.n_f
-        w1_grad /= self.n_f
+        delta2 = delta3 @ self.w2[:, 1:] * self.d_sigma(self.z2)
+        w2_grad = delta3.T @ self.a2
+        w1_grad = delta2.T @ self.a1
+        w2_grad /= y.shape[0]
+        w1_grad /= y.shape[0]
         return w1_grad, w2_grad
 
 
