@@ -43,7 +43,7 @@ def pre_processing(x: np.ndarray, xt: np.ndarray) -> tuple[np.ndarray]:
 # 1. Confirm softmax and it's impact.
 # 2. SGD
 class TwoLayersClassifier:
-    def __init__(self, n_h=6, *, rate=1, atol=1e-5, max_iters=10000):
+    def __init__(self, n_h=6, *, rate=0.1, atol=1e-5, max_iters=10000):
         self.n_h = n_h
         self.rate = rate
         self.atol = atol
@@ -69,14 +69,17 @@ class TwoLayersClassifier:
         # Initial value of weight
         self.w1 = np.random.rand(self.n_h, M + 1) * np.sqrt(1/self.n_h)
         self.w2 = np.random.rand(n_out, self.n_h + 1) * np.sqrt(1/n_out)
+        training_loss = []
         for i in range(self.max_iters):
             self.forward(x)
-            # print(self.cross_entropy_loss(y))
+            training_loss.append(self.cross_entropy_loss(y))
             grad = self.backprop(y)
             self.w1 -= grad[0] * self.rate
             self.w2 -= grad[1] * self.rate
             if grad[0].max() < self.atol and grad[1].max() < self.atol:
                 break
+        plt.plot(np.array(training_loss))
+        plt.show()
 
     def predict(self, xt):
         self.forward(xt)
