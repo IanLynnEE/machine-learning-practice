@@ -8,7 +8,7 @@ import seaborn as sns
 from sklearn.decomposition import PCA
 from sklearn.metrics import ConfusionMatrixDisplay, accuracy_score
 
-from model import TwoLayersClassifier
+from model import NNClassifier
 
 def load_data(path: str) -> tuple[np.ndarray]:
     # All images MUST have same dimension.
@@ -51,8 +51,7 @@ if __name__ == '__main__':
     xt, yt = load_data(args.test_path)
     x,  xt = pre_processing(x, xt)
 
-    if args.layer == 2:
-        clf = TwoLayersClassifier(args.hidden_node)
+    clf = NNClassifier(3, 2, n_l=args.layer, n_h=args.hidden_node)
     clf.fit(x, y)
     yp = clf.predict(xt)
     print(accuracy_score(yt, yp))
