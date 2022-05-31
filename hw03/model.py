@@ -70,18 +70,76 @@ class TwoLayersClassifier:
     def cross_entropy(self, yt, yp):
         return -np.sum(yt * np.log(yp)) / yt.shape[0]
 
+class NNClassifier:
+    def __init__(self, *, n_f, n_o, n_l=3, n_h=6, 
+                rate=0.01, epochs=50, batch_size=3000):
+        self.n_l = n_l
+        self.rate = rate
+        self.epochs = epochs
+        self.batch_size = batch_size
+        # Initial value of weight
+        theta = np.random.rand(n_h, n_h + 1) * np.sqrt(1/n_h)
+        self.w = [theta for _ in range(n_l)]
+        self.w[0] = np.random.rand(n_h, n_f + 1) * np.sqrt(1/n_h)
+        self.w[n_l-1] = np.random.rand(n_o, n_h + 1) * np.sqrt(1/n_o)
+        self.z = [0 for _ in range(n_l+1)]
+        self.a = [0 for _ in range(n_l+1)]
+    
+    def cross_entropy(self, yt, yp):
+        return -np.sum(yt * np.log(yp)) / yt.shape[0]
+
+    def fit(self, x, labels):
+        # Make one-hot label.
+        y = np.zeros((len(labels), np.max(labels)))
+        for i in range(len(labels)):
+            y[i, labels[i] - 1] = 1
+        # SGD
+        yp = np.ones_like(y)
+        training_loss = np.zeros(self.epochs)
+        for k in range(self.epochs):
+            for j in range(self.batch_size):
+                rand = np.random.randint(0, x.shape[0])
+                self.forward(x[rand])
+                grad = self.backprop(y[rand])
+                for i in range(0, self.n_l):
+                    self.w[i] -= grad[i] * self.rate
+                yp[rand] = self.a[self.n_l]
+            training_loss[k] = self.cross_entropy(y, yp)
+        plt.plot(training_loss)
+
+    def predict(self, xt):
+        yp = np.zeros(xt.shape[0])
+        for i in range(xt.shape[0]):
+            self.forward(xt[i])
+            yp[i] = self.a[self.n_l].argmax() + 1
+        return yp
+
+    def forward(self, x):
+        self.a[0] = np.insert(x, 0, 1)
+        for i in range(1, self.n_l + 1):
+            self.z[i] = self.w[i-1] @ self.a[i-1]
+            self.a[i] = np.insert(sigmoid(self.z[i]), 0, 1)
+        self.a[self.n_l] = softmax(self.z[self.n_l])
+
+    def backprop(self, y):
+        dw = [0 for _ in range(self.n_l)]
+        delta = self.a[self.n_l] - y
+        for i in range(self.n_l-1, 0, -1):
+            dw[i] = np.outer(delta, self.a[i])
+            delta = self.w[i][:, 1:].T @ delta * sigmoid(self.z[i], True)
+        dw[0] = np.outer(delta, self.a[0])
+        return dw
 
 
 class NNClassifier_batch:
     def __init__(self, *, n_f, n_o, n_l=3, n_h=6, rate=0.1, max_iters=10000):
         self.n_l = n_l
-        self.n_h = n_h
         self.rate = rate
         self.max_iters = max_iters
         # Initial value of weight
         theta = np.random.rand(n_h, n_h + 1) * np.sqrt(1/n_h)
         self.w = [theta for _ in range(n_l)]
-        self.w[0] = np.random.rand(self.n_h, n_f + 1) * np.sqrt(1/self.n_h)
+        self.w[0] = np.random.rand(n_h, n_f + 1) * np.sqrt(1/n_h)
         self.w[n_l-1] = np.random.rand(n_o, n_h + 1) * np.sqrt(1/n_o)
         self.z = [0 for _ in range(n_l+1)]
         self.a = [0 for _ in range(n_l+1)]
