@@ -24,7 +24,7 @@ def make_one_hot(labels):
 
 class NNClassifier:
     def __init__(self, n_o, n_f, *, n_l=3, n_h=6,
-                 rate=0.01, epochs=50, batch_size=3000):
+                 rate=0.01, epochs=30, batch_size=1000):
         self.n_l = n_l
         self.rate = rate
         self.epochs = epochs
@@ -34,8 +34,11 @@ class NNClassifier:
         self.w = [theta for _ in range(n_l)]
         self.w[0] = np.random.rand(n_h, n_f + 1) * np.sqrt(1/n_h)
         self.w[n_l-1] = np.random.rand(n_o, n_h + 1) * np.sqrt(1/n_o)
+        self.best = self.w
         self.act = [0 for _ in range(n_l+1)]
         self.unit = [0 for _ in range(n_l+1)]
+        print(f'Hidden Layers: {n_l}\nHidden Units: {n_h}')
+        print(f'Learning Rate: {rate}\nBatch Size: {batch_size}')
 
     def cross_entropy(self, yt, yp):
         return -np.sum(yt * np.log(yp)) / yt.shape[0]
@@ -47,6 +50,7 @@ class NNClassifier:
         yp_val = np.ones_like(y_val)
         training_loss = np.zeros(self.epochs)
         valid_loss = np.zeros(self.epochs)
+        min_valid_loss = np.finfo(np.float64).max
         for k in range(self.epochs):
             for j in range(self.batch_size):
                 rand = np.random.randint(0, x.shape[0])
@@ -61,11 +65,18 @@ class NNClassifier:
                     self.forward(x_val[j])
                     yp_val[j] = self.unit[self.n_l]
                 valid_loss[k] = self.cross_entropy(y_val, yp_val)
+                if min_valid_loss > valid_loss[k]:
+                    print('Update best model to epoch =', k, end='\r')
+                    min_valid_loss = valid_loss[k]
+                    self.best = self.w
         if x_val is not None:
+            print()
             return training_loss, valid_loss
+        self.best = self.w
         return training_loss
 
     def predict(self, xt):
+        self.w = self.best
         yp = np.zeros(xt.shape[0])
         for i in range(xt.shape[0]):
             self.forward(xt[i])
