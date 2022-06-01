@@ -6,12 +6,14 @@ def sigmoid(x, derivative=False):
         return sigmoid(x) * (1 - sigmoid(x))
     return 1 / (1 + np.exp(-x))
 
+
 def softmax(x):
     if x.ndim == 2:
         exps = np.exp(x - x.max(axis=1, keepdims=True))
         return exps / np.sum(exps, axis=1, keepdims=True)
     exps = np.exp(x - x.max())
     return exps / np.sum(exps)
+
 
 def make_one_hot(labels):
     y = np.zeros((len(labels), np.max(labels)))
@@ -21,8 +23,8 @@ def make_one_hot(labels):
 
 
 class NNClassifier:
-    def __init__(self, n_o, n_f, *, n_l=3, n_h=6, 
-                rate=0.01, epochs=50, batch_size=3000):
+    def __init__(self, n_o, n_f, *, n_l=3, n_h=6,
+                 rate=0.01, epochs=50, batch_size=3000):
         self.n_l = n_l
         self.rate = rate
         self.epochs = epochs
@@ -34,17 +36,15 @@ class NNClassifier:
         self.w[n_l-1] = np.random.rand(n_o, n_h + 1) * np.sqrt(1/n_o)
         self.act = [0 for _ in range(n_l+1)]
         self.unit = [0 for _ in range(n_l+1)]
-    
+
     def cross_entropy(self, yt, yp):
         return -np.sum(yt * np.log(yp)) / yt.shape[0]
-
 
     def fit(self, x, labels, x_val=None, label_val=None):
         y = make_one_hot(labels)
         yp = np.ones_like(y)
-        if x_val is not None:
-            y_val = make_one_hot(label_val)
-            yp_val = np.ones_like(y_val)
+        y_val = make_one_hot(label_val)
+        yp_val = np.ones_like(y_val)
         training_loss = np.zeros(self.epochs)
         valid_loss = np.zeros(self.epochs)
         for k in range(self.epochs):
@@ -101,7 +101,7 @@ class NNClassifierBatch:
         self.w[n_l-1] = np.random.rand(n_o, n_h + 1) * np.sqrt(1/n_o)
         self.act = [0 for _ in range(n_l+1)]
         self.unit = [0 for _ in range(n_l+1)]
-    
+
     def cross_entropy(self, y):
         return -np.sum(y * np.log(self.unit[self.n_l])) / y.shape[0]
 

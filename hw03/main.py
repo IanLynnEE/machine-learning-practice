@@ -11,7 +11,6 @@ from sklearn.metrics import ConfusionMatrixDisplay, accuracy_score
 from model import NNClassifier
 
 
-
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--layer', type=int, default=2)
@@ -21,9 +20,9 @@ def main():
     parser.add_argument('--train_path', type=str, default='Data_train')
     parser.add_argument('--test_path', type=str, default='Data_test')
     args = parser.parse_args()
-    
+
     labels = ['Carambula', 'Lychee', 'Pear']
-    x,  y  = load_data(args.train_path)
+    x, y = load_data(args.train_path)
     xt, yt = load_data(args.test_path)
     x, xv, y, yv = train_test_split(x, y, test_size=0.2)
     x,  xv, xt = pre_processing(x, xv, xt)
@@ -45,14 +44,16 @@ def main():
     ConfusionMatrixDisplay.from_predictions(yt, yp, display_labels=labels)
     plt.show()
 
+    plot_decision_boundary(clf)
 
-def load_data(path: str) -> tuple[np.ndarray]:
+
+def load_data(path: str) -> tuple[np.ndarray, np.ndarray]:
     # All images MUST have same dimension.
     # Train and Test MUST have same set of labels.
     i = 0
     labels = []
     for label in os.listdir(path):
-        if os.path.isdir(os.path.join(path,label)):
+        if os.path.isdir(os.path.join(path, label)):
             i += 1
             for filename in os.listdir(os.path.join(path, label)):
                 labels.append(i)
@@ -64,13 +65,13 @@ def load_data(path: str) -> tuple[np.ndarray]:
                     images = img
     return images, np.array(labels)
 
+
 def train_test_split(x: np.ndarray, y: np.ndarray, test_size: float):
-    n = x.shape[0]
-    end_idx_train = -int(-n // (1 / test_size + np.finfo(float).eps))
-    indices = np.random.permutation(n)
+    end_idx_train = -int(-x.shape[0] // (1 / test_size + np.finfo(float).eps))
+    indices = np.random.permutation(x.shape[0])
     train_idx, test_idx = indices[:end_idx_train], indices[end_idx_train:]
     return (
-        x[train_idx, ...], x[test_idx, ...], 
+        x[train_idx, ...], x[test_idx, ...],
         y[train_idx, ...], y[test_idx, ...]
     )
 
@@ -86,6 +87,9 @@ def pre_processing(x: np.ndarray, xv: np.ndarray, xt: np.ndarray):
         pca.transform((xt - mean) / std)
     )
 
+
+def plot_decision_boundary(clf):
+    return
 
 
 if __name__ == '__main__':
