@@ -1,6 +1,5 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from sklearn.metrics import mean_squared_error
 
 
 def sigmoid(x, derivative=False):
@@ -35,14 +34,20 @@ class NNClassifier:
     def cross_entropy(self, yt, yp):
         return -np.sum(yt * np.log(yp)) / yt.shape[0]
 
-    def fit(self, x, labels):
-        # Make one-hot label.
+    def make_one_hot(self, labels):
         y = np.zeros((len(labels), np.max(labels)))
         for i in range(len(labels)):
             y[i, labels[i] - 1] = 1
-        # SGD
+        return y
+
+    def fit(self, x, labels, x_val=None, label_val=None):
+        y = self.make_one_hot(labels)
         yp = np.ones_like(y)
+        if x_val is not None:
+            y_val = self.make_one_hot(label_val)
+            yp_val = np.ones_like(y_val)
         training_loss = np.zeros(self.epochs)
+        valid_loss = np.zeros(self.epochs)
         for k in range(self.epochs):
             for j in range(self.batch_size):
                 rand = np.random.randint(0, x.shape[0])
@@ -50,9 +55,16 @@ class NNClassifier:
                 grad = self.backprop(y[rand])
                 for i in range(0, self.n_l):
                     self.w[i] -= grad[i] * self.rate
-                yp[rand] = self.a[self.n_l]
+                yp[rand] = self.z[self.n_l]
             training_loss[k] = self.cross_entropy(y, yp)
-        plt.plot(training_loss)
+            if x_val is not None:
+                for j in range(len(x_val)):
+                    self.forward(x_val[j])
+                    yp_val[j] = self.z[self.n_l]
+                valid_loss[k] = self.cross_entropy(y_val, yp_val)
+        if x_val is not None:
+            return training_loss, valid_loss
+        return training_loss
 
     def predict(self, xt):
         yp = np.zeros(xt.shape[0])
