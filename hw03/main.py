@@ -5,6 +5,7 @@ from PIL import Image
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+import pandas as pd
 from sklearn.decomposition import PCA
 from sklearn.metrics import ConfusionMatrixDisplay, accuracy_score
 
@@ -13,10 +14,10 @@ from model import NNClassifier
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--layer', type=int, default=2)
-    parser.add_argument('--hidden_node', type=int, default=6)
+    parser.add_argument('--layers', type=int, default=2)
+    parser.add_argument('--hidden_units', type=int, default=6)
     parser.add_argument('--epochs', type=int, default=30)
-    parser.add_argument('--batch_size', type=int, default=3000)
+    parser.add_argument('--batch_size', type=int, default=1000)
     parser.add_argument('--train_path', type=str, default='Data_train')
     parser.add_argument('--test_path', type=str, default='Data_test')
     args = parser.parse_args()
@@ -24,10 +25,10 @@ def main():
     labels = ['Carambula', 'Lychee', 'Pear']
     x, y = load_data(args.train_path)
     xt, yt = load_data(args.test_path)
+    x, xt = pre_processing(x, xt)
     x, xv, y, yv = train_test_split(x, y, test_size=0.2)
-    x,  xv, xt = pre_processing(x, xv, xt)
 
-    clf = NNClassifier(3, 2, n_l=args.layer, n_h=args.hidden_node,
+    clf = NNClassifier(3, 2, n_l=args.layers, n_h=args.hidden_units,
                        epochs=args.epochs, batch_size=args.batch_size)
     training_loss, valid_loss = clf.fit(x, y, xv, yv)
 
@@ -37,14 +38,15 @@ def main():
     plt.ylabel('Loss')
     plt.xlabel('Epochs')
     plt.legend()
-    plt.show()
+    plt.savefig('training_loss.png', dpi=300)
 
     yp = clf.predict(xt)
     print('ACC =', accuracy_score(yt, yp))
     ConfusionMatrixDisplay.from_predictions(yt, yp, display_labels=labels)
-    plt.show()
+    plt.savefig('confusion_matrix.png', dpi=300)
 
-    plot_decision_boundary(clf)
+    plot_decision_boundary(clf, xt, yt)
+    return
 
 
 def load_data(path: str) -> tuple[np.ndarray, np.ndarray]:
@@ -76,19 +78,32 @@ def train_test_split(x: np.ndarray, y: np.ndarray, test_size: float):
     )
 
 
-def pre_processing(x: np.ndarray, xv: np.ndarray, xt: np.ndarray):
+def pre_processing(x: np.ndarray, xt: np.ndarray):
     mean = np.mean(x, axis=0)
     std = np.std(x, axis=0) + np.finfo(np.float64).eps
     pca = PCA(2)
-    pca.fit((x - mean) / std)
-    return (
-        pca.transform((x - mean) / std),
-        pca.transform((xv - mean) / std),
-        pca.transform((xt - mean) / std)
-    )
+    return pca.fit_transform((x-mean) / std), pca.transform((xt-mean) / std)
 
 
-def plot_decision_boundary(clf):
+def plot_decision_boundary(clf, x, y):
+    grid0 = np.arange(x[:, 0].min()-1, x[:, 0].max()+1, 0.1)
+    grid1 = np.arange(x[:, 1].min()-1, x[:, 1].max()+1, 0.1)
+    xx, yy = np.meshgrid(grid0, grid1)
+    r1, r2 = xx.flatten(), yy.flatten()
+    r1, r2 = r1.reshape((len(r1), 1)), r2.reshape((len(r2), 1))
+    grid = np.hstack((r1, r2))
+    yp = clf.predict(grid)
+    zz = yp.reshape(xx.shape)
+    plt.clf()
+    plt.contourf(xx, yy, zz, cmap='rocket_r', alpha=0.3)
+    # plt.gca().set_prop_cycle(None)
+
+    df = pd.DataFrame(x, columns=['PCA 0', 'PCA 1'])
+    df['label'] = y
+    sns.scatterplot(data=df, x='PCA 0', y='PCA 1', hue='label')
+    plt.title('Test Dataset')
+    plt.savefig('decision_boundary.png', dpi=300)
+    plt.clf()
     return
 
 
