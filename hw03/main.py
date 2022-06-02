@@ -25,7 +25,7 @@ def main():
     labels = ['Carambula', 'Lychee', 'Pear']
     x, y = load_data(args.train_path)
     xt, yt = load_data(args.test_path)
-    x, xt = pre_processing(x, xt)
+    x, xt = reduce_dimension(x, xt)
     x, xv, y, yv = train_test_split(x, y, test_size=0.2)
 
     clf = NNClassifier(3, 2, n_l=args.layers, n_h=args.hidden_units,
@@ -86,11 +86,17 @@ def train_test_split(x: np.ndarray, y: np.ndarray, test_size: float):
     return x_train, x_test, y_train, y_test
 
 
-def pre_processing(x: np.ndarray, xt: np.ndarray):
+def reduce_dimension(x: np.ndarray, xt: np.ndarray, xv=np.empty()):
     mean = np.mean(x, axis=0)
     std = np.std(x, axis=0) + np.finfo(np.float64).eps
     pca = PCA(2)
-    return pca.fit_transform((x-mean) / std), pca.transform((xt-mean) / std)
+    if xv is None:
+        return pca.fit_transform((x-mean)/std), pca.transform((xt-mean)/std)
+    return (
+        pca.fit_transform((x-mean) / std),
+        pca.transform((xt-mean) / std),
+        pca.transform((xv-mean) / std)
+    )
 
 
 def plot_decision_boundary(clf, x, y):
