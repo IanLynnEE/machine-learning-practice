@@ -86,7 +86,7 @@ def train_test_split(x: np.ndarray, y: np.ndarray, test_size: float):
     return x_train, x_test, y_train, y_test
 
 
-def reduce_dimension(x: np.ndarray, xt: np.ndarray, xv=np.empty()):
+def reduce_dimension(x: np.ndarray, xt: np.ndarray, xv=None):
     mean = np.mean(x, axis=0)
     std = np.std(x, axis=0) + np.finfo(np.float64).eps
     pca = PCA(2)
