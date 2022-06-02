@@ -15,6 +15,10 @@ def softmax(x):
     return exps / np.sum(exps)
 
 
+def cross_entropy(yt, yp):
+    return -np.sum(yt * np.log(yp)) / yt.shape[0]
+
+
 def make_one_hot(labels):
     y = np.zeros((len(labels), np.max(labels)))
     for i in range(len(labels)):
@@ -40,9 +44,6 @@ class NNClassifier:
         print(f'Hidden Layers: {n_l}\nHidden Units: {n_h}')
         print(f'Learning Rate: {rate}\nBatch Size: {batch_size}')
 
-    def cross_entropy(self, yt, yp):
-        return -np.sum(yt * np.log(yp)) / yt.shape[0]
-
     def fit(self, x, labels, x_val=None, label_val=None):
         y = make_one_hot(labels)
         yp = np.ones_like(y)
@@ -59,12 +60,12 @@ class NNClassifier:
                 for i in range(0, self.n_l):
                     self.w[i] -= grad[i] * self.rate
                 yp[rand] = self.unit[self.n_l]
-            training_loss[k] = self.cross_entropy(y, yp)
+            training_loss[k] = cross_entropy(y, yp)
             if x_val is not None:
                 for j in range(len(x_val)):
                     self.forward(x_val[j])
                     yp_val[j] = self.unit[self.n_l]
-                valid_loss[k] = self.cross_entropy(y_val, yp_val)
+                valid_loss[k] = cross_entropy(y_val, yp_val)
                 if min_valid_loss > valid_loss[k]:
                     print('Update best model to epoch =', k, end='\r')
                     min_valid_loss = valid_loss[k]
@@ -93,10 +94,9 @@ class NNClassifier:
     def backprop(self, y):
         dw = [0 for _ in range(self.n_l)]
         delta = self.unit[self.n_l] - y
-        for i in range(self.n_l-1, 0, -1):
+        for i in range(self.n_l-1, -1, -1):
             dw[i] = np.outer(delta, self.unit[i])
             delta = self.w[i][:, 1:].T @ delta * sigmoid(self.act[i], True)
-        dw[0] = np.outer(delta, self.unit[0])
         return dw
 
 
@@ -113,9 +113,6 @@ class NNClassifierBatch:
         self.act = [0 for _ in range(n_l+1)]
         self.unit = [0 for _ in range(n_l+1)]
 
-    def cross_entropy(self, y):
-        return -np.sum(y * np.log(self.unit[self.n_l])) / y.shape[0]
-
     def fit(self, x, labels):
         y = make_one_hot(labels)
         training_loss = np.zeros(self.epochs)
@@ -125,7 +122,7 @@ class NNClassifierBatch:
             grad = self.backprop(y)
             for i in range(0, self.n_l):
                 self.w[i] -= grad[i] * self.rate
-            training_loss[j] = self.cross_entropy(y)
+            training_loss[j] = cross_entropy(y, self.unit[self.n_l])
         return training_loss
 
     def predict(self, xt):
@@ -142,8 +139,7 @@ class NNClassifierBatch:
     def backprop(self, y):
         dw = [0 for _ in range(self.n_l)]
         delta = self.unit[self.n_l] - y
-        for i in range(self.n_l-1, 0, -1):
+        for i in range(self.n_l-1, -1, -1):
             dw[i] = delta.T @ self.unit[i] / y.shape[0]
             delta = delta @ self.w[i][:, 1:] * sigmoid(self.act[i], True)
-        dw[0] = delta.T @ self.unit[0] / y.shape[0]
         return dw
