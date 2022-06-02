@@ -4,19 +4,22 @@ Neural Network from scratch for image classification.
 
 - [Run](#run)
 - [Result](#result)
-- [Decision Boundary](#decision-boundary)
 - [Implementation](#implementation)
   - [Preprocessing](#preprocessing)
   - [Network](#network)
+- [Decision Boundary](#decision-boundary)
+  - [Increase Layers](#increase-layers)
+  - [Increase Units](#increase-units)
+  - [Surmise](#surmise)
 
 ## Run
 
 Please make sure:
 - the training and test dataset must have the same set of labels
 - images should be black and white
-- images must have dimensions.
+- images must have the same dimensions.
 
-Please put the following files in the same directory.
+Please put the following files in the working directory.
 
 ```
 working_directory
@@ -32,9 +35,9 @@ working_directory
 └── model.py
 ```
 
-Then, simply run `python3 main.py`. There are some options:
+Now, simply run `python3 main.py`. There are some options:
 
-```
+```bash
 options:
   --layers LAYERS
   --hidden_units HIDDEN_UNITS
@@ -50,7 +53,7 @@ The `HIDDEN_UNIT` is set to be the same for all hidden layers, and a bias unit i
 
 The following figure is said to be two layers with 5 hidden units.
 
-![two_layers_five_hidden_units](two_layers_five_hidden_units.png)
+![two_layers_five_hidden_units](images/two_layers_five_hidden_units.jpg)
 
 
 
@@ -62,19 +65,13 @@ For the network above (2 hidden layers, 5 hidden units), the best accuracy is ar
 
 ![2-5-1000-acc](images/2-5-1000/acc.png)
 
-![2-5-1000-acc](images/2-5-1000/training_loss.png)
+![2-5-1000-loss](images/2-5-1000/training_loss.png)
 
 For the network (3 hidden layers, 5 hidden units), the best accuracy is around 96%, but the average result is better in my observation.
 
 ![3-5-1000-acc](images/3-5-1000/acc.png)
 
-![3-5-1000-acc](images/3-5-1000/training_loss.png)
-
-
-
-## Decision Boundary
-
-
+![3-5-1000-loss](images/3-5-1000/training_loss.png)
 
 
 
@@ -275,6 +272,57 @@ For BGD, this is on the TODO list.
 
 
 <div style="page-break-after: always;"></div>
+
+## Decision Boundary
+
+As mentioned above, the randomness of splitting training and validation data and initial weights makes it hard to analyze.
+
+Following are two decision boundaries using the same parameters for training.
+
+![2-5-1000-decision-compare](images/2-5-1000/decision_boundary_compare.png)
+
+The shape of the decision region is relatively simple with few layers and units.
+
+
+### Increase Layers
+
+When we use 3 layers, the decision region seems to be more complicated. It does not guarantee a better result, but I find it usually performs better than the average case of 2 layers.
+
+![3-5-1000-decision-compare](images/3-5-1000/decision_boundary_compare.png)
+
+The better performance comes with the cost of the need for a larger dataset. The 3 layers network needs more epochs to train, and as I'm using SGD, the times of resuing data increase. This will raise the concern of overfitting.
+
+![3-5-1000-overfitting](images/3-5-1000/overfitting.png)
+
+The 3 layers network should be enough, but we can try the 4 layers to check the shape of the decision region. The accuracy can hit 96.6%, and the shape now has even sharper corners.
+
+![4-5-1000-decision](images/4-5-1000/decision_boundary.png)
+
+
+### Increase Units
+
+Go back to the 2 layers network. If I used 6 hidden units, it seems the decision region is complicated as well.
+
+![2-6-1000-decision](images/2-6-1000/decision_boundary.png)
+
+In the training loss figure, even with the same epochs * batch_size, the overfitting is more presented in comparison to 5 units.
+
+![2-6-1000-loss](images/2-6-1000/training_loss.png)
+
+On the other hand, when using 3 units, the boundary will keep simple, even with 91% accuracy.
+
+![2-3-1000-decision](images/2-3-1000/decision_boundary.png)
+
+
+### Surmise
+
+More layers and more hidden units make the network more complicated. As the result, the boundary region can be sharper or more complicated. Thus, it increases the risk of overfitting, but it can yield a better result as it "fits" better. Depending on the variance of training and test data, the conclusion varies.
+
+For this task, I would choose the 3 layers network with 5 units.
+
+Please note that the images in `images/2-5-1000` come from the best case. It does not represent the average case.
+
+
 
 [^1]: https://cs231n.github.io/linear-classify/#softmax
 [^2]: https://github.com/lionelmessi6410/Neural-Networks-from-Scratch
