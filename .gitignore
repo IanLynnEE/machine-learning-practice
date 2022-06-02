@@ -2,6 +2,9 @@
 **/train.csv
 **/test.csv
 **/report.pdf
+**/images
+
+# Dataset
 **/Data_test
 **/Data_train
 
@@ -134,3 +137,6 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# vscode
+**/.vscode

@@ -38,12 +38,12 @@ def main():
     plt.ylabel('Loss')
     plt.xlabel('Epochs')
     plt.legend()
-    plt.savefig('training_loss.png', dpi=300)
+    plt.savefig('images/training_loss.png', dpi=300)
 
     yp = clf.predict(xt)
     print('ACC =', accuracy_score(yt, yp))
     ConfusionMatrixDisplay.from_predictions(yt, yp, display_labels=labels)
-    plt.savefig('confusion_matrix.png', dpi=300)
+    plt.savefig('images/confusion_matrix.png', dpi=300)
 
     plot_decision_boundary(clf, xt, yt)
     return
@@ -115,7 +115,7 @@ def plot_decision_boundary(clf, x, y):
     df['label'] = y
     sns.scatterplot(data=df, x='PCA 0', y='PCA 1', hue='label')
     plt.title('Test Dataset')
-    plt.savefig('decision_boundary.png', dpi=300)
+    plt.savefig('images/decision_boundary.png', dpi=300)
     plt.clf()
     return
 
