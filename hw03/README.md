@@ -2,16 +2,6 @@
 
 Neural Network from scratch for image classification.
 
-- [Run](#run)
-- [Result](#result)
-- [Implementation](#implementation)
-  - [Preprocessing](#preprocessing)
-  - [Network](#network)
-- [Decision Boundary](#decision-boundary)
-  - [Increase Layers](#increase-layers)
-  - [Increase Units](#increase-units)
-  - [Surmise](#surmise)
-
 ## Run
 
 Please make sure:
@@ -47,11 +37,7 @@ options:
   --test_path TEST_PATH
 ```
 
-The `LAYERS` is set to be the number of hidden layers between input and output.
-
-The `HIDDEN_UNIT` is set to be the same for all hidden layers, and a bias unit is added to each layer.
-
-The following figure is said to be two layers with 5 hidden units.
+The `LAYERS` is set to be the number of hidden layers between input and output. The `HIDDEN_UNIT` is set to be the same for all hidden layers, and a bias unit is added to each layer. The following figure is said to be two layers with 5 hidden units.
 
 ![two_layers_five_hidden_units](images/two_layers_five_hidden_units.jpg)
 
@@ -63,17 +49,20 @@ Due to the randomness of splitting training and validation data and initial weig
 
 For the network above (2 hidden layers, 5 hidden units), the best accuracy is around 96%.
 
-![2-5-1000-acc](images/2-5-1000/acc.png)
+<div style="text-align:center">
+<img src="images/2-5-1000/acc.png" alt="2-5-1000-acc" width=290 />
+<img src="images/2-5-1000/training_loss.png" alt="2-5-1000-loss"  width=290 />
+</div>
 
-![2-5-1000-loss](images/2-5-1000/training_loss.png)
 
 For the network (3 hidden layers, 5 hidden units), the best accuracy is around 96%, but the average result is better in my observation.
 
-![3-5-1000-acc](images/3-5-1000/acc.png)
+<div style="text-align:center">
+<img src="images/3-5-1000/acc.png" alt="3-5-1000-acc" width=290 />
+<img src="images/3-5-1000/training_loss.png" alt="3-5-1000-loss"  width=290 />
+</div>
 
-![3-5-1000-loss](images/3-5-1000/training_loss.png)
-
-
+<div style="page-break-after: always;"></div>
 
 ## Implementation
 
@@ -127,7 +116,7 @@ To avoid overfitting, validation data is used to determine the number of epochs.
 
 This function mimics the behavior of the function provided by sklearn.
 
-
+<div style="page-break-after: always;"></div>
 
 ### Network
 
@@ -181,18 +170,13 @@ For BGD, the training follows steps:
 
 For SGD, it's the same except that only one data is fed into steps 1, 2, and 3. Repeat `batch_size` times, and it goes to step 4 to finish an epoch.
 
-We need to use weights for feed forward, so weights are initialized[^2].
+We need to use weights for feed forward, so weights are initialized[^2]. It's the same for BGD and SGD.
 
 ```python
 # n_h: number of hidden units; n_f: number of features; n_o: number of labels
 self.w[0] = np.random.rand(n_h, n_f + 1) * np.sqrt(1/n_h)
 self.w[1] = np.random.rand(n_o, n_h + 1) * np.sqrt(1/n_o)
-```
-
-It's the same for BGD and SGD. In general,
-
-```python
-self.w[n] = np.random.rand(f_out, f_in) * np.sqrt(1/fan_out)
+# self.w[n] = np.random.rand(f_out, f_in) * np.sqrt(1/fan_out)
 ```
 
 #### Feed Forward
@@ -225,6 +209,7 @@ For SGD, since the input shape is (number of features, ), simply switch to $A = 
 
 For a deeper network, it follows the same feed-forward steps. Increase the number of repeated $A = Z W^T$.
 
+<div style="page-break-after: always;"></div>
 
 #### Backpropagation
 
@@ -267,51 +252,40 @@ self.w[k] -= grad[k] * learning_rate
 
 For SGD, if the validation loss gets smaller, the weight is saved as the best model.
 
-For BGD, this is on the TODO list.
+As for BGD, this is on the TODO list.
 
 
-
-<div style="page-break-after: always;"></div>
 
 ## Decision Boundary
 
-As mentioned above, the randomness of splitting training and validation data and initial weights makes it hard to analyze.
-
-Following are two decision boundaries using the same parameters for training.
+The randomness of splitting training and validation data and initial weights makes it hard to analyze. Following are two decision boundaries using the same parameters for training.
 
 ![2-5-1000-decision-compare](images/2-5-1000/decision_boundary_compare.png)
 
-The shape of the decision region is relatively simple with few layers and units.
 
+#### Increase Layers
 
-### Increase Layers
-
-When we use 3 layers, the decision region seems to be more complicated. It does not guarantee a better result, but I find it usually performs better than the average case of 2 layers.
+The shape of the decision region is relatively simple with 2 layers and 5 units, as above shows . When I use 3 layers, the decision region seems to be more complicated. It does not guarantee a better result, but I find it usually performs better than the average case of 2 layers.
 
 ![3-5-1000-decision-compare](images/3-5-1000/decision_boundary_compare.png)
 
-The better performance comes with the cost of the need for a larger dataset. The 3 layers network needs more epochs to train, and as I'm using SGD, the times of resuing data increase. This will raise the concern of overfitting.
+The better performance comes with the cost of the need for a larger dataset. The 3 layers network needs more epochs to train, and the times of re-using data increase. This will raise the concern of overfitting. 
 
-![3-5-1000-overfitting](images/3-5-1000/overfitting.png)
+The 3 layers network should be enough, but I try the 4 layers to check the shape of the decision region. The accuracy can hit 96.6%, and the shape now has even sharper corners.
 
-The 3 layers network should be enough, but we can try the 4 layers to check the shape of the decision region. The accuracy can hit 96.6%, and the shape now has even sharper corners.
+![3-5-1000-overfitting_4-5-1000-decision](images/3-5-1000/overfitting_with_4-5-1000-decision_boundary.png)
 
-![4-5-1000-decision](images/4-5-1000/decision_boundary.png)
+<div style="text-align: center"><p><font size=1>▲The 3 layers network overfitting (left) &emsp;&emsp;&emsp;&emsp;▲ The 4 layers network has sharper corners (right)</font></p></div>
 
+#### Increase Units
 
-### Increase Units
+Go back to the 2 layers network. If I used 6 hidden units, it seems the decision region is complicated as well. In the training loss figure, even with the same `epochs * batch_size`, the overfitting is more presented in comparison to 5 units.
 
-Go back to the 2 layers network. If I used 6 hidden units, it seems the decision region is complicated as well.
-
-![2-6-1000-decision](images/2-6-1000/decision_boundary.png)
-
-In the training loss figure, even with the same epochs * batch_size, the overfitting is more presented in comparison to 5 units.
-
-![2-6-1000-loss](images/2-6-1000/training_loss.png)
+![2-6-1000-result](images/2-6-1000/result.png)
 
 On the other hand, when using 3 units, the boundary will keep simple, even with 91% accuracy.
 
-![2-3-1000-decision](images/2-3-1000/decision_boundary.png)
+![2-3-1000-result](images/2-3-1000/result.png)
 
 
 ### Surmise
@@ -321,8 +295,6 @@ More layers and more hidden units make the network more complicated. As the resu
 For this task, I would choose the 3 layers network with 5 units.
 
 Please note that the images in `images/2-5-1000` come from the best case. It does not represent the average case.
-
-
 
 [^1]: https://cs231n.github.io/linear-classify/#softmax
 [^2]: https://github.com/lionelmessi6410/Neural-Networks-from-Scratch
