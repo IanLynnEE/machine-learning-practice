@@ -69,13 +69,21 @@ def load_data(path: str) -> tuple[np.ndarray, np.ndarray]:
 
 
 def train_test_split(x: np.ndarray, y: np.ndarray, test_size: float):
-    end_idx_train = -int(-x.shape[0] // (1 / test_size + np.finfo(float).eps))
-    indices = np.random.permutation(x.shape[0])
-    train_idx, test_idx = indices[:end_idx_train], indices[end_idx_train:]
-    return (
-        x[train_idx, ...], x[test_idx, ...],
-        y[train_idx, ...], y[test_idx, ...]
-    )
+    x_train = np.empty((0, *x.shape[1:]))
+    x_test = np.empty((0, *x.shape[1:]))
+    y_train = np.empty((0, ), y.dtype)
+    y_test = np.empty((0, ), y.dtype)
+    for i in range(1, y.max() + 1):
+        select_idx = np.where(y[:] == i)[0]
+        xx, yy = x[select_idx, ...], y[select_idx, ...]
+        end_idx = -int(-xx.shape[0] // (1 / test_size + np.finfo(float).eps))
+        indices = np.random.permutation(xx.shape[0])
+        test_idx, train_idx = indices[:end_idx], indices[end_idx:]
+        x_train = np.vstack((x_train, xx[train_idx, ...]))
+        y_train = np.hstack((y_train, yy[train_idx, ...]))
+        x_test = np.vstack((x_test, xx[test_idx, ...]))
+        y_test = np.hstack((y_test, yy[test_idx, ...]))
+    return x_train, x_test, y_train, y_test
 
 
 def pre_processing(x: np.ndarray, xt: np.ndarray):
@@ -96,7 +104,6 @@ def plot_decision_boundary(clf, x, y):
     zz = yp.reshape(xx.shape)
     plt.clf()
     plt.contourf(xx, yy, zz, cmap='rocket_r', alpha=0.3)
-    # plt.gca().set_prop_cycle(None)
 
     df = pd.DataFrame(x, columns=['PCA 0', 'PCA 1'])
     df['label'] = y
