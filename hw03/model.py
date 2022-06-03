@@ -81,9 +81,9 @@ class NNClassifier:
                 yp[i] = self.unit[self.n_l].argmax() + 1
         elif self.method == 'BGD':
             self.__forward(xt)
-            yp = self.unit[self.n_l].argmax() + 1
+            yp = self.unit[self.n_l].argmax(axis=1) + 1
         return yp
-    
+
     def __SGD(self, x, y, valid=False):
         yp = np.ones_like(y)
         if valid:
@@ -109,12 +109,13 @@ class NNClassifier:
         return cross_entropy(y, self.unit[self.n_l])
 
     def __forward(self, x):
-        self.unit[0] = np.insert(x, 0, 1)
         if np.ndim(x) == 1:
+            self.unit[0] = np.insert(x, 0, 1)
             for i in range(1, self.n_l + 1):
                 self.act[i] = self.w[i-1] @ self.unit[i-1]
                 self.unit[i] = np.insert(sigmoid(self.act[i]), 0, 1)
         else:
+            self.unit[0] = np.insert(x, 0, 1, axis=1)
             for i in range(1, self.n_l + 1):
                 self.act[i] = self.unit[i-1] @ self.w[i-1].T
                 self.unit[i] = np.insert(sigmoid(self.act[i]), 0, 1, axis=1)
