@@ -209,6 +209,17 @@ For SGD, since the input shape is (number of features, ), simply switch to $A = 
 
 For a deeper network, it follows the same feed-forward steps. Increase the number of repeated $A = Z W^T$.
 
+In conclusion, for SGD:
+
+```python
+def forward(self, x):
+    self.unit[0] = np.insert(x, 0, 1)
+    for i in range(1, self.n_l + 1):
+        self.act[i] = self.w[i-1] @ self.unit[i-1]
+        self.unit[i] = np.insert(sigmoid(self.act[i]), 0, 1)
+    self.unit[self.n_l] = softmax(self.act[self.n_l])
+```
+
 <div style="page-break-after: always;"></div>
 
 #### Backpropagation
@@ -265,17 +276,17 @@ The randomness of splitting training and validation data and initial weights mak
 
 #### Increase Layers
 
-The shape of the decision region is relatively simple with 2 layers and 5 units, as above shows . When I use 3 layers, the decision region seems to be more complicated. It does not guarantee a better result, but I find it usually performs better than the average case of 2 layers.
+The shape of the decision region is relatively simple with 2 layers and 5 units, as the above shows. When I use 3 layers, the decision region seems to be more complicated. It does not guarantee a better result, but I find it usually performs better than the average case of 2 layers.
 
 ![3-5-1000-decision-compare](images/3-5-1000/decision_boundary_compare.png)
 
-The better performance comes with the cost of the need for a larger dataset. The 3 layers network needs more epochs to train, and the times of re-using data increase. This will raise the concern of overfitting. 
+The better performance comes with the cost of the need for a larger dataset. The 3 layers network needs more epochs to train, and the number of times reusing data increases. This will raise the concern of overfitting. 
 
 The 3 layers network should be enough, but I try the 4 layers to check the shape of the decision region. The accuracy can hit 96.6%, and the shape now has even sharper corners.
 
 ![3-5-1000-overfitting_4-5-1000-decision](images/3-5-1000/overfitting_with_4-5-1000-decision_boundary.png)
 
-<div style="text-align: center"><p><font size=1>▲The 3 layers network overfitting (left) &emsp;&emsp;&emsp;&emsp;▲ The 4 layers network has sharper corners (right)</font></p></div>
+<div style="text-align: center"><p><font size=1>▲The 3 layers network overfitting (left) &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;▲ The 4 layers network has sharper corners (right)</font></p></div>
 
 #### Increase Units
 
