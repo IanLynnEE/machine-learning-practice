@@ -39,7 +39,7 @@ class NNClassifier:
         self.w = [theta for _ in range(n_l)]
         self.w[0] = np.random.rand(n_h, n_f + 1) * np.sqrt(1/n_h)
         self.w[n_l-1] = np.random.rand(n_o, n_h + 1) * np.sqrt(1/n_o)
-        self.best = self.w
+        self.best = self.w.copy()
         self.act = [0 for _ in range(n_l+1)]
         self.unit = [0 for _ in range(n_l+1)]
         print(f'Hidden Layers: {n_l}\nHidden Units: {n_h}')
@@ -65,15 +65,15 @@ class NNClassifier:
             if min_valid_loss > valid_loss[k]:
                 print('Update best model to epoch =', k, end='\r')
                 min_valid_loss = valid_loss[k]
-                self.best = self.w
+                self.best = self.w.copy()
         if x_val is None:
-            self.best = self.w
+            self.best = self.w.copy()
             return training_loss
         print()
         return training_loss, valid_loss
 
     def predict(self, xt):
-        self.w = self.best
+        self.w = self.best.copy()
         if self.method == 'SGD':
             yp = np.zeros(xt.shape[0])
             for i in range(xt.shape[0]):
